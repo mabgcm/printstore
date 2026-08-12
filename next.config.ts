@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.printify.com",
       },
+      {
+        protocol: "https",
+        hostname: "images-api.printify.com",
+      },
     ],
   },
   turbopack: {
