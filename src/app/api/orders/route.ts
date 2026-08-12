@@ -28,10 +28,9 @@ function publicOrder(order: PrintifyOrder) {
 }
 
 export async function GET(request: Request) {
-  const user = await verifyFirebaseToken(request);
-  if (!user?.email) return NextResponse.json({ error: "Sign in is required." }, { status: 401 });
-
   try {
+    const user = await verifyFirebaseToken(request);
+    if (!user?.email) return NextResponse.json({ error: "Your session could not be verified. Sign out and sign in again." }, { status: 401 });
     const email = user.email.trim().toLowerCase();
     const matches: PrintifyOrder[] = [];
     let page = 1;
@@ -44,7 +43,8 @@ export async function GET(request: Request) {
     } while (page <= lastPage);
     matches.sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
     return NextResponse.json({ orders: matches.map(publicOrder) });
-  } catch {
+  } catch (reason) {
+    console.error("[api/orders] live order lookup failed", reason);
     return NextResponse.json({ error: "Live order status is temporarily unavailable." }, { status: 502 });
   }
 }

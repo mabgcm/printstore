@@ -8,7 +8,7 @@ service cloud.firestore {
     match /productVariants/{document=**} { allow read: if true; allow write: if false; }
     match /providers/{document=**} { allow read, write: if false; }
     match /users/{userId} {
-      function customerFields() { return ["displayName", "phone", "email", "marketingConsent", "addresses", "photoURL", "createdAt", "updatedAt"]; }
+      function customerFields() { return ["displayName", "phone", "email", "marketingConsent", "addresses", "photoURL", "privacyRequest", "createdAt", "updatedAt"]; }
       allow read: if isOwner(userId);
       allow create: if isOwner(userId)
         && request.resource.data.keys().hasOnly(customerFields())

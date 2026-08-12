@@ -31,7 +31,10 @@ export function OrderTracker() {
     try {
       const token = await user.getIdToken();
       const response = await fetch("/api/orders", { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
-      const data = await response.json() as { orders?: TrackedOrder[]; error?: string };
+      const body = await response.text();
+      let data: { orders?: TrackedOrder[]; error?: string } = {};
+      try { data = body ? JSON.parse(body) as typeof data : {}; }
+      catch { data = { error: "The order service returned an invalid response. Please try again." }; }
       if (!response.ok) throw new Error(data.error ?? "Orders could not be loaded.");
       setOrders(data.orders ?? []);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Orders could not be loaded."); }

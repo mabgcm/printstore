@@ -14,7 +14,7 @@ export async function verifyFirebaseToken(request: Request) {
   const authorization = request.headers.get("authorization");
   if (!authorization?.startsWith("Bearer ")) return null;
   try {
-    return await getAuth(adminApp()).verifyIdToken(authorization.slice(7), true);
+    return await getAuth(adminApp()).verifyIdToken(authorization.slice(7));
   } catch {
     return null;
   }

@@ -39,6 +39,14 @@ export async function saveCustomerProfile(userId: string, profile: CustomerProfi
   await setDoc(doc(firestore(), "users", userId), { ...profile, addresses, updatedAt: serverTimestamp() }, { merge: true });
 }
 
+export function customerErrorMessage(reason: unknown) {
+  const code = typeof reason === "object" && reason && "code" in reason ? String(reason.code) : "";
+  if (code.includes("permission-denied")) return "Profile access was denied by Firebase. Publish the updated Firestore security rules and try again.";
+  if (code.includes("unavailable")) return "The profile service is temporarily unavailable. Check your connection and try again.";
+  if (code.includes("not-found")) return "The Firestore database is not available for this project.";
+  return "We couldn't save your changes. Please try again.";
+}
+
 export function normalizeDefaultAddress(addresses: CustomerAddress[], defaultId: string) {
   return addresses.map((address) => ({ ...address, isDefault: address.id === defaultId }));
 }

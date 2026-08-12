@@ -24,6 +24,9 @@ export default function CheckoutPage() {
       const preferred = data.addresses.find((item) => item.isDefault) ?? data.addresses[0];
       if (preferred) { setAddress(preferred); setSelectedAddressId(preferred.id); setSaveAddress(false); }
       else if (data.displayName) { const [firstName, ...lastName] = data.displayName.split(" "); setAddress((current) => ({ ...current, firstName, lastName: lastName.join(" "), phone: data.phone })); }
+    }).catch((reason) => {
+      console.error("[checkout] profile load failed", reason);
+      if (active) setProfile({ displayName: "", phone: "", email: user.email ?? "", marketingConsent: false, addresses: [] });
     });
     return () => { active = false; };
   }, [user]);

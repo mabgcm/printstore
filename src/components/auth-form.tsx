@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
 import { firebaseAuth } from "@/lib/firebase/client";
+import { emailActionSettings } from "@/lib/firebase/action-settings";
 
 type Mode = "login" | "register" | "forgot";
 
@@ -21,7 +22,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     event.preventDefault(); setBusy(true); setError(""); setMessage("");
     try {
       if (mode === "forgot") {
-        await sendPasswordResetEmail(firebaseAuth(), email);
+        await sendPasswordResetEmail(firebaseAuth(), email, emailActionSettings("/login?reset=complete"));
         setMessage("Password reset email sent. Check your inbox and spam folder.");
       } else {
         if (mode === "register") await createUserWithEmailAndPassword(firebaseAuth(), email, password);
