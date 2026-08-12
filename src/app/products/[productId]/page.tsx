@@ -21,6 +21,7 @@ export default async function ProductPage({ params }: Props) {
   const mainImage = images.find((item) => item.is_default) ?? images[0];
   const variants = product.variants.filter((item) => item.is_enabled && item.is_available);
   const description = product.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const customizable = product.tags.some((tag) => /personalization|customi[sz]/i.test(tag));
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10 sm:px-10 lg:px-16">
@@ -33,8 +34,9 @@ export default async function ProductPage({ params }: Props) {
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-700">Made to order</p>
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">{product.title}</h1>
           <p className="mt-5 text-lg font-bold">From ${variants.length ? (Math.min(...variants.map((item) => item.price)) / 100).toFixed(2) : "—"}</p>
+          {customizable && <p className="mt-4 inline-flex rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-900">Personalization available</p>}
           <p className="mt-6 leading-7 text-black/60">{description}</p>
-          <AddToCart productId={product.id} title={product.title} image={mainImage?.src ?? ""} variants={variants} />
+          <AddToCart productId={product.id} title={product.title} image={mainImage?.src ?? ""} variants={variants} customizable={customizable} />
           <div className="mt-8 grid grid-cols-3 gap-3 border-t border-black/10 pt-6 text-center text-xs font-bold"><span>Made to order</span><span>Secure checkout</span><span>Quality print</span></div>
         </div>
       </div>

@@ -12,6 +12,7 @@ export interface CartItem {
   image: string;
   price: number;
   quantity: number;
+  personalization?: string;
 }
 
 interface AuthContextValue { user: User | null; loading: boolean }
@@ -20,8 +21,8 @@ interface CartContextValue {
   count: number;
   subtotal: number;
   addItem: (item: CartItem) => void;
-  updateQuantity: (productId: string, variantId: number, quantity: number) => void;
-  removeItem: (productId: string, variantId: number) => void;
+  updateQuantity: (productId: string, variantId: number, personalization: string | undefined, quantity: number) => void;
+  removeItem: (productId: string, variantId: number, personalization?: string) => void;
   clearCart: () => void;
 }
 
@@ -57,15 +58,15 @@ export function Providers({ children }: { children: ReactNode }) {
     count: items.reduce((sum, item) => sum + item.quantity, 0),
     subtotal: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     addItem: (item) => setItems((current) => {
-      const exists = current.find((entry) => entry.productId === item.productId && entry.variantId === item.variantId);
+      const exists = current.find((entry) => entry.productId === item.productId && entry.variantId === item.variantId && entry.personalization === item.personalization);
       return exists
         ? current.map((entry) => entry === exists ? { ...entry, quantity: entry.quantity + item.quantity } : entry)
         : [...current, item];
     }),
-    updateQuantity: (productId, variantId, quantity) => setItems((current) => current
-      .map((item) => item.productId === productId && item.variantId === variantId ? { ...item, quantity } : item)
+    updateQuantity: (productId, variantId, personalization, quantity) => setItems((current) => current
+      .map((item) => item.productId === productId && item.variantId === variantId && item.personalization === personalization ? { ...item, quantity } : item)
       .filter((item) => item.quantity > 0)),
-    removeItem: (productId, variantId) => setItems((current) => current.filter((item) => item.productId !== productId || item.variantId !== variantId)),
+    removeItem: (productId, variantId, personalization) => setItems((current) => current.filter((item) => item.productId !== productId || item.variantId !== variantId || item.personalization !== personalization)),
     clearCart: () => setItems([]),
   }), [items]);
 
