@@ -78,6 +78,13 @@ export interface UserProfile {
   displayName?: string;
   photoURL?: string;
   role: "customer" | "admin";
+  phone?: string;
+  marketingConsent?: boolean;
+  addresses?: Array<{
+    id: string; label: string; firstName: string; lastName: string; phone: string;
+    address1: string; address2: string; city: string; region: string; postalCode: string;
+    country: "CA" | "US"; isDefault: boolean;
+  }>;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

@@ -19,6 +19,30 @@ export interface PrintifyVariant {
   is_available: boolean;
 }
 
+export interface PrintifyPrintLayer {
+  id?: string;
+  type: string;
+  input_text?: string;
+  font_family?: string;
+  font_size?: number;
+  font_color?: string;
+  src?: string;
+  x?: number;
+  y?: number;
+  scale?: number;
+  angle?: number;
+  width?: number;
+  height?: number;
+}
+
+export interface PrintifyPrintArea {
+  variant_ids: number[];
+  placeholders: Array<{
+    position: string;
+    images: PrintifyPrintLayer[];
+  }>;
+}
+
 export interface PrintifyProduct {
   id: string;
   title: string;
@@ -29,12 +53,49 @@ export interface PrintifyProduct {
   visible: boolean;
   blueprint_id: number;
   print_provider_id: number;
+  print_areas?: PrintifyPrintArea[];
+  sales_channel_properties?: unknown[];
 }
 
 interface PrintifyProductPage {
   current_page: number;
   last_page: number;
   data: PrintifyProduct[];
+}
+
+export interface PrintifyShipment {
+  carrier: string;
+  number: string;
+  url: string;
+  delivered_at?: string;
+}
+
+export interface PrintifyOrder {
+  id: string;
+  external_id?: string;
+  app_order_id?: string;
+  status: string;
+  created_at: string;
+  sent_to_production_at?: string;
+  fulfilled_at?: string;
+  total_price: number;
+  total_shipping: number;
+  total_tax: number;
+  address_to: { email: string; first_name?: string; last_name?: string; city?: string; country?: string };
+  line_items: Array<{
+    product_id: string;
+    variant_id: number;
+    quantity: number;
+    status: string;
+    metadata?: { title?: string; variant_label?: string; sku?: string };
+  }>;
+  shipments?: PrintifyShipment[];
+}
+
+interface PrintifyOrderPage {
+  current_page: number;
+  last_page: number;
+  data: PrintifyOrder[];
 }
 
 export interface PrintifyBlueprint {
@@ -57,6 +118,7 @@ export interface PrintifyCatalogVariant {
   title: string;
   options: Record<string, string>;
   decoration_methods: string[];
+  placeholders?: Array<{ position: string; decoration_method: string; width: number; height: number }>;
 }
 
 interface PrintifyVariantResponse {
@@ -109,6 +171,20 @@ export async function getPrintifyProduct(productId: string): Promise<PrintifyPro
   const { shopId } = getPrintifyConfig();
   return printifyRequest<PrintifyProduct>(`/shops/${shopId}/products/${productId}.json`, {
     next: { revalidate: 300 },
+  });
+}
+
+export async function getPrintifyOrders(page = 1): Promise<PrintifyOrderPage> {
+  const { shopId } = getPrintifyConfig();
+  return printifyRequest<PrintifyOrderPage>(`/shops/${shopId}/orders.json?limit=10&page=${page}`, {
+    cache: "no-store",
+  });
+}
+
+export async function getPrintifyOrder(orderId: string): Promise<PrintifyOrder> {
+  const { shopId } = getPrintifyConfig();
+  return printifyRequest<PrintifyOrder>(`/shops/${shopId}/orders/${encodeURIComponent(orderId)}.json`, {
+    cache: "no-store",
   });
 }
 
