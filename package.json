@@ -6,10 +6,10 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint ."
+    "dev": "\"$NODE\" node_modules/next/dist/bin/next dev",
+    "build": "\"$NODE\" node_modules/next/dist/bin/next build",
+    "start": "\"$NODE\" node_modules/next/dist/bin/next start",
+    "lint": "\"$NODE\" node_modules/eslint/bin/eslint.js ."
   },
   "dependencies": {
     "firebase": "^12.17.1",
