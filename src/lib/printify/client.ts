@@ -105,6 +105,13 @@ export async function getPrintifyProducts(): Promise<PrintifyProduct[]> {
   return response.data.filter((product) => product.visible);
 }
 
+export async function getPrintifyProduct(productId: string): Promise<PrintifyProduct> {
+  const { shopId } = getPrintifyConfig();
+  return printifyRequest<PrintifyProduct>(`/shops/${shopId}/products/${productId}.json`, {
+    next: { revalidate: 300 },
+  });
+}
+
 export function getPrintifyBlueprints() {
   return printifyRequest<PrintifyBlueprint[]>("/catalog/blueprints.json", {
     next: { revalidate: 3600 },
