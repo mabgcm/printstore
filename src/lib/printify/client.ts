@@ -37,6 +37,34 @@ interface PrintifyProductPage {
   data: PrintifyProduct[];
 }
 
+export interface PrintifyBlueprint {
+  id: number;
+  title: string;
+  description: string;
+  brand: string;
+  model: string;
+  images: string[];
+}
+
+export interface PrintifyProvider {
+  id: number;
+  title: string;
+  decoration_methods: string[];
+}
+
+export interface PrintifyCatalogVariant {
+  id: number;
+  title: string;
+  options: Record<string, string>;
+  decoration_methods: string[];
+}
+
+interface PrintifyVariantResponse {
+  id: number;
+  title: string;
+  variants: PrintifyCatalogVariant[];
+}
+
 function getPrintifyConfig() {
   const token = process.env.PRINTIFY_API_TOKEN;
   const shopId = process.env.PRINTIFY_SHOP_ID;
@@ -75,4 +103,31 @@ export async function getPrintifyProducts(): Promise<PrintifyProduct[]> {
   );
 
   return response.data.filter((product) => product.visible);
+}
+
+export function getPrintifyBlueprints() {
+  return printifyRequest<PrintifyBlueprint[]>("/catalog/blueprints.json", {
+    next: { revalidate: 3600 },
+  });
+}
+
+export function getPrintifyBlueprint(blueprintId: number) {
+  return printifyRequest<PrintifyBlueprint>(`/catalog/blueprints/${blueprintId}.json`, {
+    next: { revalidate: 3600 },
+  });
+}
+
+export function getPrintifyProviders(blueprintId: number) {
+  return printifyRequest<PrintifyProvider[]>(`/catalog/blueprints/${blueprintId}/print_providers.json`, {
+    next: { revalidate: 3600 },
+  });
+}
+
+export async function getPrintifyVariants(blueprintId: number, providerId: number) {
+  const response = await printifyRequest<PrintifyVariantResponse>(
+    `/catalog/blueprints/${blueprintId}/print_providers/${providerId}/variants.json`,
+    { next: { revalidate: 3600 } },
+  );
+
+  return response.variants;
 }
