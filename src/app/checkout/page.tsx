@@ -51,7 +51,16 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "Idempotency-Key": crypto.randomUUID() },
         body: JSON.stringify({ items: items.map(({ productId, variantId, quantity }) => ({ productId, variantId, quantity })), address }),
       });
-      const data = await response.json() as { url?: string; error?: string };
+      const responseText = await response.text();
+      let data: { url?: string; error?: string } = {};
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText) as { url?: string; error?: string };
+        } catch {
+          console.error("[checkout] non-JSON response", { status: response.status, contentType: response.headers.get("content-type") });
+        }
+      }
+      if (!responseText) throw new Error(`Checkout server returned an empty response (${response.status}). Restart the development server and try again.`);
       if (!response.ok || !data.url) throw new Error(data.error ?? "Checkout could not be started.");
       window.location.assign(data.url);
     } catch (reason) {
