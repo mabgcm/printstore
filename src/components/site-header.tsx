@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useAuth, useCart } from "@/components/providers";
 
@@ -33,7 +34,7 @@ export function SiteHeader({ categories }: SiteHeaderProps) {
     <div className="announcement"><p>Free shipping on orders $75+ <span>•</span> Made to order, worth the wait</p></div>
     <header className="site-header">
       <div className="header-inner">
-        <Link href="/" className="brand" aria-label="Printstore home"><span>Print</span><i>store</i><b>✦</b></Link>
+        <Link href="/" className="brand-logo" aria-label="Can Print Store home"><Image src="/images/logo.png" alt="Can Print Store" width={800} height={150} priority /></Link>
         <nav className="utility-nav" aria-label="Account navigation">
           {!loading && <div className="header-auth-links">
             {user
@@ -50,7 +51,7 @@ export function SiteHeader({ categories }: SiteHeaderProps) {
     </header>
     {menuOpen && <div className="menu-overlay" onMouseDown={closeMenu} role="presentation">
       <aside id="site-menu" className="menu-drawer" role="dialog" aria-modal="true" aria-label="Site menu" onMouseDown={(event) => event.stopPropagation()}>
-        <header><Link href="/" className="brand" onClick={closeMenu}><span>Print</span><i>store</i><b>✦</b></Link><button type="button" onClick={closeMenu} aria-label="Close menu">×</button></header>
+        <header><Link href="/" className="brand-logo" onClick={closeMenu}><Image src="/images/logo.png" alt="Can Print Store" width={800} height={150} /></Link><button type="button" onClick={closeMenu} aria-label="Close menu">×</button></header>
         <nav aria-label="Main navigation">
           <Link href="/#shop" onClick={closeMenu}>Shop all <span>↗</span></Link>
           {categories.map((category) => <Link href={`/categories/${category.slug}`} key={category.slug} onClick={closeMenu}>{category.title}<span>→</span></Link>)}

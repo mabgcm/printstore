@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   authors: [{ name: "Printstore" }],
   creator: "Printstore",
   publisher: "Printstore",
+  icons: {
+    icon: [{ url: "/images/logoSQR.png", type: "image/png", sizes: "1000x1000" }],
+    shortcut: "/images/logoSQR.png",
+    apple: [{ url: "/images/logoSQR.png", type: "image/png", sizes: "1000x1000" }],
+  },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   openGraph: { type: "website", locale: "en_CA", url: siteUrl, siteName: "Printstore", title: "Printstore | Original, Made to Order", description: "Original gifts, apparel and art prints—made to order, made to matter.", images: [{ url: "/og-printstore.png", width: 1200, height: 630, alt: "Printstore — original designs made to order." }] },
   twitter: { card: "summary_large_image", title: "Printstore | Original, Made to Order", description: "Original gifts, apparel and art prints—made to order, made to matter.", images: ["/og-printstore.png"] },
@@ -32,5 +37,5 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     : catalog.categories;
   const categoryLinks = populatedCategories.map(({ slug, title }) => ({ slug, title }));
 
-  return <html lang="en-CA" className={`${sans.variable} ${serif.variable}`}><body><Providers><SiteHeader categories={categoryLinks} />{children}<SiteFooter /></Providers></body></html>;
+  return <html lang="en-CA" className={`${sans.variable} ${serif.variable}`}><body><Providers><SiteHeader categories={categoryLinks} />{children}<SiteFooter categories={categoryLinks} /></Providers></body></html>;
 }
