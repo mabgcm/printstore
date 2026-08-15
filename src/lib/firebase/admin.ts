@@ -2,6 +2,7 @@ import "server-only";
 
 import { getApp, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
 
 function adminApp() {
   if (getApps().length) return getApp();
@@ -18,4 +19,8 @@ export async function verifyFirebaseToken(request: Request) {
   } catch {
     return null;
   }
+}
+
+export function adminFirestore() {
+  return getFirestore(adminApp());
 }
