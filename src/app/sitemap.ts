@@ -1,6 +1,14 @@
 import type { MetadataRoute } from "next";
+import { getStorefrontCatalog } from "@/lib/catalog/storefront";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://printstore.ca";
-  return ["", "/categories/t-shirts", "/categories/mugs", "/categories/art-prints", "/categories/accessories", "/categories/home-living", "/about", "/faq", "/shipping", "/privacy", "/terms"].map((path, index) => ({ url: `${base}${path}`, lastModified: new Date(), changeFrequency: index <= 5 ? "weekly" : "monthly", priority: index === 0 ? 1 : index <= 5 ? 0.8 : 0.6 }));
+  const { products, categories } = await getStorefrontCatalog().catch(() => ({ products: [], categories: [] }));
+  const paths = [
+    "",
+    ...categories.map((category) => `/categories/${category.slug}`),
+    ...products.map((product) => `/products/${product.id}`),
+    "/about", "/faq", "/shipping", "/privacy", "/terms",
+  ];
+  return paths.map((path, index) => ({ url: `${base}${path}`, lastModified: new Date(), changeFrequency: index <= categories.length + products.length ? "weekly" : "monthly", priority: index === 0 ? 1 : path.startsWith("/categories/") ? 0.8 : 0.6 }));
 }

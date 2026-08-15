@@ -1,4 +1,4 @@
-import type { PrintifyProduct } from "@/lib/printify/client";
+import type { PrintifyBlueprint, PrintifyProduct } from "@/lib/printify/client";
 
 export interface StoreCategory {
   slug: string;
@@ -74,3 +74,53 @@ export function productsForCategory(products: PrintifyProduct[], slug: string) {
   return category ? products.filter((product) => productBelongsToCategory(product, category)) : [];
 }
 export function categoryForProduct(product: PrintifyProduct) { return STORE_CATEGORIES.find((category) => productBelongsToCategory(product, category)); }
+
+function slugify(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "") || "products";
+}
+
+/** Adds one storefront category for each published Printify blueprint not covered above. */
+export function categoriesForProducts(products: PrintifyProduct[], blueprints: PrintifyBlueprint[] = []): StoreCategory[] {
+  const categories = [...STORE_CATEGORIES];
+  const knownBlueprintIds = new Set(categories.flatMap((category) => [...category.blueprintIds]));
+  const blueprintTitles = new Map(blueprints.map((blueprint) => [blueprint.id, blueprint.title]));
+  const unmatchedIds = [...new Set(
+    products
+      .filter((product) => !categoryForProduct(product) && !knownBlueprintIds.has(product.blueprint_id))
+      .map((product) => product.blueprint_id),
+  )];
+  const usedSlugs = new Set(categories.map((category) => category.slug));
+
+  for (const blueprintId of unmatchedIds) {
+    const sample = products.find((product) => product.blueprint_id === blueprintId);
+    const title = blueprintTitles.get(blueprintId) ?? sample?.tags[0] ?? `Products ${blueprintId}`;
+    const baseSlug = slugify(title);
+    const slug = usedSlugs.has(baseSlug) ? `${baseSlug}-${blueprintId}` : baseSlug;
+    usedSlugs.add(slug);
+    categories.push({
+      slug,
+      title,
+      singular: title.toLowerCase(),
+      blueprintIds: [blueprintId],
+      fallbackMatcher: new RegExp(`(?!)`),
+      intro: `Explore our made-to-order ${title.toLowerCase()}, featuring original Printstore designs.`,
+      seoTitle: `${title} made to order`,
+      seoBody: `Discover original ${title.toLowerCase()} produced on demand and made especially for you.`,
+      subcategories: [{ label: `All ${title}`, blueprintIds: [blueprintId] }],
+      styles: ["New arrivals", "Original designs", "Made to order"],
+      color: ["#f58a73", "#b8ccad", "#cfc2e7", "#a9c8c0"][categories.length % 4],
+    });
+  }
+
+  return categories;
+}
+
+export function productsForStoreCategory(products: PrintifyProduct[], category: StoreCategory) {
+  return products.filter((product) => productBelongsToCategory(product, category));
+}

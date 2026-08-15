@@ -4,6 +4,8 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { getStorefrontCatalog } from "@/lib/catalog/storefront";
+import { STORE_CATEGORIES } from "@/lib/catalog/categories";
 
 const sans = DM_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const serif = Playfair_Display({ subsets: ["latin"], variable: "--font-serif", display: "swap", style: ["normal", "italic"] });
@@ -23,6 +25,12 @@ export const metadata: Metadata = {
   category: "shopping",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en-CA" className={`${sans.variable} ${serif.variable}`}><body><Providers><SiteHeader />{children}<SiteFooter /></Providers></body></html>;
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const catalog = await getStorefrontCatalog().catch(() => ({ products: [], categories: [...STORE_CATEGORIES] }));
+  const populatedCategories = catalog.products.length ? catalog.categories
+    .filter((category) => catalog.products.some((product) => category.blueprintIds.includes(product.blueprint_id) || category.fallbackMatcher.test(`${product.title} ${product.tags.join(" ")}`)))
+    : catalog.categories;
+  const categoryLinks = populatedCategories.map(({ slug, title }) => ({ slug, title }));
+
+  return <html lang="en-CA" className={`${sans.variable} ${serif.variable}`}><body><Providers><SiteHeader categories={categoryLinks} />{children}<SiteFooter /></Providers></body></html>;
 }

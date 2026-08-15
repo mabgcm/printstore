@@ -159,12 +159,23 @@ async function printifyRequest<T>(path: string, init?: RequestInit): Promise<T> 
 
 export async function getPrintifyProducts(): Promise<PrintifyProduct[]> {
   const { shopId } = getPrintifyConfig();
-  const response = await printifyRequest<PrintifyProductPage>(
+  const firstPage = await printifyRequest<PrintifyProductPage>(
     `/shops/${shopId}/products.json?limit=50`,
     { next: { revalidate: 300 } },
   );
 
-  return response.data.filter((product) => product.visible);
+  const remainingPages = await Promise.all(
+    Array.from({ length: Math.max(0, firstPage.last_page - 1) }, (_, index) =>
+      printifyRequest<PrintifyProductPage>(
+        `/shops/${shopId}/products.json?limit=50&page=${index + 2}`,
+        { next: { revalidate: 300 } },
+      ),
+    ),
+  );
+
+  return [firstPage, ...remainingPages]
+    .flatMap((page) => page.data)
+    .filter((product) => product.visible);
 }
 
 export async function getPrintifyProduct(productId: string): Promise<PrintifyProduct> {

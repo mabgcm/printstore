@@ -4,7 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
 import { getPrintifyProduct } from "@/lib/printify/client";
-import { categoryForProduct } from "@/lib/catalog/categories";
+import { productBelongsToCategory } from "@/lib/catalog/categories";
+import { getStorefrontCatalog } from "@/lib/catalog/storefront";
 
 interface Props { params: Promise<{ productId: string }> }
 
@@ -22,7 +23,8 @@ export default async function ProductPage({ params }: Props) {
   const mainImage = images.find((item) => item.is_default) ?? images[0];
   const variants = product.variants.filter((item) => item.is_enabled && item.is_available);
   const description = product.description.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  const category = categoryForProduct(product);
+  const { categories } = await getStorefrontCatalog().catch(() => ({ products: [], categories: [] }));
+  const category = categories.find((item) => productBelongsToCategory(product, item));
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10 sm:px-10 lg:px-16">

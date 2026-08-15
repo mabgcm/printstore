@@ -2,28 +2,28 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPrintifyProducts, type PrintifyProduct } from "@/lib/printify/client";
-import { STORE_CATEGORIES, productsForCategory } from "@/lib/catalog/categories";
+import type { PrintifyProduct } from "@/lib/printify/client";
+import { productsForStoreCategory } from "@/lib/catalog/categories";
+import { getStorefrontCatalog } from "@/lib/catalog/storefront";
 
 interface Props { params: Promise<{ slug: string }>; searchParams: Promise<{ sort?: string; page?: string }> }
 
 function imageFor(product?: PrintifyProduct) { return product?.images.find((image) => image.is_default) ?? product?.images[0]; }
 function priceFor(product: PrintifyProduct) { const prices = product.variants.filter((variant) => variant.is_enabled && variant.is_available).map((variant) => variant.price); return prices.length ? Math.min(...prices) : null; }
-function getCategory(slug: string) {
-  return STORE_CATEGORIES.find((category) => category.slug === slug);
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params; const category = getCategory(slug);
+  const { slug } = await params;
+  const { categories } = await getStorefrontCatalog().catch(() => ({ products: [], categories: [] }));
+  const category = categories.find((item) => item.slug === slug);
   if (!category) return {};
   return { title: category.seoTitle, description: category.intro, alternates: { canonical: `/categories/${slug}` }, openGraph: { title: `${category.title} | Printstore`, description: category.intro } };
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
-  const { slug } = await params; const query = await searchParams; const category = getCategory(slug);
+  const { slug } = await params; const query = await searchParams;
+  const { products: allProducts, categories } = await getStorefrontCatalog().catch(() => ({ products: [], categories: [] }));
+  const category = categories.find((item) => item.slug === slug);
   if (!category) notFound();
-  const allProducts = await getPrintifyProducts().catch(() => []);
-  const products = productsForCategory(allProducts, slug);
+  const products = productsForStoreCategory(allProducts, category);
   if (query.sort === "price-low") products.sort((a, b) => (priceFor(a) ?? Infinity) - (priceFor(b) ?? Infinity));
   if (query.sort === "price-high") products.sort((a, b) => (priceFor(b) ?? -Infinity) - (priceFor(a) ?? -Infinity));
   if (query.sort === "name") products.sort((a, b) => a.title.localeCompare(b.title));

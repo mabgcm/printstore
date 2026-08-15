@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { getPrintifyProducts, type PrintifyProduct } from "@/lib/printify/client";
-import { STORE_CATEGORIES, productsForCategory } from "@/lib/catalog/categories";
+import type { PrintifyProduct } from "@/lib/printify/client";
+import { productsForStoreCategory } from "@/lib/catalog/categories";
+import { getStorefrontCatalog } from "@/lib/catalog/storefront";
 
 export const dynamic = "force-dynamic";
 
@@ -28,12 +29,12 @@ function productPrice(product: PrintifyProduct) {
 }
 
 export default async function Home() {
-  const products = await getPrintifyProducts().catch(() => []);
+  const { products, categories: storeCategories } = await getStorefrontCatalog().catch(() => ({ products: [], categories: [] }));
   const featured = products.slice(0, 8);
   const heroProduct = products[0];
   const heroImage = productImage(heroProduct);
-  const circleItems = STORE_CATEGORIES.map((category) => {
-    const product = productsForCategory(products, category.slug)[0];
+  const circleItems = storeCategories.map((category) => {
+    const product = productsForStoreCategory(products, category)[0];
     return { label: category.title, slug: category.slug, color: category.color, product, image: productImage(product) };
   });
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://printstore.ca";
