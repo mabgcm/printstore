@@ -35,8 +35,15 @@ export function SiteHeader({ categories }: SiteHeaderProps) {
       <div className="header-inner">
         <Link href="/" className="brand" aria-label="Printstore home"><span>Print</span><i>store</i><b>✦</b></Link>
         <nav className="utility-nav" aria-label="Account navigation">
-          {!loading && <Link href={user ? "/account" : "/login"} aria-label={user ? "Open your account" : "Sign in to your account"}>Account</Link>}
-          <Link href="/cart" className="cart-link" aria-label={`Shopping bag with ${count} items`}>Bag <span>{count}</span></Link>
+          {!loading && <div className="header-auth-links">
+            {user
+              ? <Link href="/account" aria-label="Open your account">Account</Link>
+              : <><Link href="/login">Login</Link><Link href="/register">Register</Link></>}
+          </div>}
+          <Link href="/cart" className="cart-link" aria-label={`Shopping bag with ${count} items`}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.75 8.25h10.5l.75 12H6l.75-12Z" /><path d="M9 9V6a3 3 0 0 1 6 0v3" /></svg>
+            <span>{count}</span>
+          </Link>
           <button className="menu-trigger" type="button" aria-label="Open menu" aria-expanded={menuOpen} aria-controls="site-menu" onClick={() => setMenuOpen(true)}><span /><span /><span /></button>
         </nav>
       </div>
@@ -50,7 +57,9 @@ export function SiteHeader({ categories }: SiteHeaderProps) {
           <Link href="/about" onClick={closeMenu}>Our story <span>→</span></Link>
         </nav>
         <nav className="menu-secondary" aria-label="Customer links">
-          <Link href={user ? "/account" : "/login"} onClick={closeMenu}>{user ? "Your account" : "Sign in"}</Link>
+          {user
+            ? <Link href="/account" onClick={closeMenu}>Your account</Link>
+            : <><Link href="/login" onClick={closeMenu}>Login</Link><Link href="/register" onClick={closeMenu}>Register</Link></>}
           <Link href="/track-order" onClick={closeMenu}>Track an order</Link>
           <Link href="/faq" onClick={closeMenu}>FAQ</Link>
           <Link href="/cart" onClick={closeMenu}>Your bag ({count})</Link>
