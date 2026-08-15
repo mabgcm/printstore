@@ -23,5 +23,8 @@ service cloud.firestore {
       allow read: if signedIn() && resource.data.userId == request.auth.uid;
       allow update, delete: if false;
     }
+    match /productReviews/{reviewId} {
+      allow read, write: if false;
+    }
   }
 }

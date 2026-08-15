@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/add-to-cart";
+import { ProductReviews } from "@/components/product-reviews";
 import { getPrintifyProduct } from "@/lib/printify/client";
 import { productBelongsToCategory } from "@/lib/catalog/categories";
 import { getStorefrontCatalog } from "@/lib/catalog/storefront";
@@ -42,6 +43,7 @@ export default async function ProductPage({ params }: Props) {
           <div className="mt-8 grid grid-cols-3 gap-3 border-t border-black/10 pt-6 text-center text-xs font-bold"><span>Made to order</span><span>Secure checkout</span><span>Quality print</span></div>
         </div>
       </div>
+      <ProductReviews productId={product.id} />
     </main>
   );
 }
