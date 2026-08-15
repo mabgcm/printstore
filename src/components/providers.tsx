@@ -67,7 +67,10 @@ export function Providers({ children }: { children: ReactNode }) {
       .map((item) => item.productId === productId && item.variantId === variantId ? { ...item, quantity } : item)
       .filter((item) => item.quantity > 0)),
     removeItem: (productId, variantId) => setItems((current) => current.filter((item) => item.productId !== productId || item.variantId !== variantId)),
-    clearCart: () => setItems([]),
+    clearCart: () => {
+      window.localStorage.removeItem("printstore-cart-v2");
+      setItems([]);
+    },
   }), [items]);
 
   return <AuthContext.Provider value={{ user, loading }}><CartContext.Provider value={cart}>{children}</CartContext.Provider></AuthContext.Provider>;
