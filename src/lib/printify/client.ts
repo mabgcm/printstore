@@ -81,7 +81,18 @@ export interface PrintifyOrder {
   total_price: number;
   total_shipping: number;
   total_tax: number;
-  address_to: { email: string; first_name?: string; last_name?: string; city?: string; country?: string };
+  address_to: {
+    email: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    country?: string;
+    region?: string;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    zip?: string;
+  };
   line_items: Array<{
     product_id: string;
     variant_id: number;
@@ -96,6 +107,38 @@ interface PrintifyOrderPage {
   current_page: number;
   last_page: number;
   data: PrintifyOrder[];
+}
+
+export interface CreatePrintifyOrderInput {
+  external_id: string;
+  label?: string;
+  line_items: Array<{
+    product_id: string;
+    variant_id: number;
+    quantity: number;
+    external_id?: string;
+  }>;
+  shipping_method: 1 | 2 | 3 | 4;
+  send_shipping_notification: boolean;
+  address_to: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    country: string;
+    region: string;
+    address1: string;
+    address2?: string;
+    city: string;
+    zip: string;
+  };
+}
+
+export class PrintifyApiError extends Error {
+  constructor(public status: number, public responseBody: string) {
+    super(`Printify request failed with status ${status}.`);
+    this.name = "PrintifyApiError";
+  }
 }
 
 export interface PrintifyBlueprint {
@@ -151,10 +194,13 @@ async function printifyRequest<T>(path: string, init?: RequestInit): Promise<T> 
   });
 
   if (!response.ok) {
-    throw new Error(`Printify request failed with status ${response.status}.`);
+    const responseBody = (await response.text()).slice(0, 2000);
+    throw new PrintifyApiError(response.status, responseBody);
   }
 
-  return response.json() as Promise<T>;
+  if (response.status === 204) return undefined as T;
+  const body = await response.text();
+  return (body ? JSON.parse(body) : undefined) as T;
 }
 
 export async function getPrintifyProducts(): Promise<PrintifyProduct[]> {
@@ -187,7 +233,7 @@ export async function getPrintifyProduct(productId: string): Promise<PrintifyPro
 
 export async function getPrintifyOrders(page = 1): Promise<PrintifyOrderPage> {
   const { shopId } = getPrintifyConfig();
-  return printifyRequest<PrintifyOrderPage>(`/shops/${shopId}/orders.json?limit=10&page=${page}`, {
+  return printifyRequest<PrintifyOrderPage>(`/shops/${shopId}/orders.json?limit=50&page=${page}`, {
     cache: "no-store",
   });
 }
@@ -195,6 +241,35 @@ export async function getPrintifyOrders(page = 1): Promise<PrintifyOrderPage> {
 export async function getPrintifyOrder(orderId: string): Promise<PrintifyOrder> {
   const { shopId } = getPrintifyConfig();
   return printifyRequest<PrintifyOrder>(`/shops/${shopId}/orders/${encodeURIComponent(orderId)}.json`, {
+    cache: "no-store",
+  });
+}
+
+export async function findPrintifyOrderByExternalId(externalId: string) {
+  let page = 1;
+  do {
+    const response = await getPrintifyOrders(page);
+    const match = response.data.find((order) => order.external_id === externalId);
+    if (match) return match;
+    if (page >= response.last_page) return null;
+    page += 1;
+  } while (page <= 100);
+  return null;
+}
+
+export function createPrintifyOrder(input: CreatePrintifyOrderInput) {
+  const { shopId } = getPrintifyConfig();
+  return printifyRequest<PrintifyOrder>(`/shops/${shopId}/orders.json`, {
+    method: "POST",
+    body: JSON.stringify(input),
+    cache: "no-store",
+  });
+}
+
+export function sendPrintifyOrderToProduction(orderId: string) {
+  const { shopId } = getPrintifyConfig();
+  return printifyRequest<void>(`/shops/${shopId}/orders/${encodeURIComponent(orderId)}/send_to_production.json`, {
+    method: "POST",
     cache: "no-store",
   });
 }

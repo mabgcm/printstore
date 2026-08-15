@@ -9,7 +9,8 @@
     "dev": "\"$NODE\" node_modules/next/dist/bin/next dev",
     "build": "\"$NODE\" node_modules/next/dist/bin/next build",
     "start": "\"$NODE\" node_modules/next/dist/bin/next start",
-    "lint": "\"$NODE\" node_modules/eslint/bin/eslint.js ."
+    "lint": "\"$NODE\" node_modules/eslint/bin/eslint.js .",
+    "setup:printify-webhooks": "\"$NODE\" --env-file=.env.local scripts/configure-printify-webhooks.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.3.1",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { adminFirestore } from "@/lib/firebase/admin";
+import { fulfillPaidCheckout } from "@/lib/orders/fulfillment";
 import { stripe } from "@/lib/stripe/server";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,8 @@ async function updateCheckoutOrder(session: Stripe.Checkout.Session, status: str
     stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null,
     stripeCustomerId: typeof session.customer === "string" ? session.customer : session.customer?.id ?? null,
     customerDetails: session.customer_details ?? null,
+    stripeShippingDetails: session.collected_information?.shipping_details ?? null,
+    currency: session.currency?.toUpperCase() ?? "CAD",
     amountSubtotal: session.amount_subtotal ?? null,
     amountTotal: session.amount_total ?? null,
     totalDetails: session.total_details ?? null,
@@ -41,7 +44,13 @@ export async function POST(request: Request) {
 
     if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object;
-      await updateCheckoutOrder(session, session.payment_status === "paid" ? "paid" : "processing_payment");
+      if (session.payment_status === "paid") {
+        const currentSession = await stripe().checkout.sessions.retrieve(session.id);
+        await updateCheckoutOrder(currentSession, "paid");
+        await fulfillPaidCheckout(session.id);
+      } else {
+        await updateCheckoutOrder(session, "processing_payment");
+      }
     } else if (event.type === "checkout.session.async_payment_failed") {
       await updateCheckoutOrder(event.data.object, "payment_failed");
     } else if (event.type === "checkout.session.expired") {

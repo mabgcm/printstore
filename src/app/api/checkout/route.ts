@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { adminFirestore, verifyFirebaseToken } from "@/lib/firebase/admin";
@@ -8,11 +8,6 @@ import { stripe } from "@/lib/stripe/server";
 export const dynamic = "force-dynamic";
 
 interface CheckoutItemInput { productId: string; variantId: number; quantity: number }
-interface CheckoutAddressInput {
-  firstName: string; lastName: string; phone: string; address1: string; address2?: string;
-  city: string; region: string; postalCode: string; country: "CA" | "US";
-}
-
 function validItems(value: unknown): value is CheckoutItemInput[] {
   return Array.isArray(value) && value.length > 0 && value.length <= 20 && value.every((item) =>
     typeof item === "object" && item !== null
@@ -22,22 +17,13 @@ function validItems(value: unknown): value is CheckoutItemInput[] {
   );
 }
 
-function validAddress(value: unknown): value is CheckoutAddressInput {
-  if (typeof value !== "object" || value === null) return false;
-  const address = value as Record<string, unknown>;
-  return ["firstName", "lastName", "phone", "address1", "city", "region", "postalCode"].every((field) => typeof address[field] === "string" && String(address[field]).trim().length > 0)
-    && (address.country === "CA" || address.country === "US");
-}
-
 export async function POST(request: Request) {
   try {
     const user = await verifyFirebaseToken(request);
     if (!user?.uid || !user.email) return NextResponse.json({ error: "Sign in is required." }, { status: 401 });
 
-    const body = await request.json() as { items?: unknown; address?: unknown };
-    if (!validItems(body.items) || !validAddress(body.address)) {
-      return NextResponse.json({ error: "The checkout details are incomplete or invalid." }, { status: 400 });
-    }
+    const body = await request.json() as { items?: unknown };
+    if (!validItems(body.items)) return NextResponse.json({ error: "The checkout details are incomplete or invalid." }, { status: 400 });
 
     const productIds = [...new Set(body.items.map((item) => item.productId))];
     const products = await Promise.all(productIds.map((productId) => getPrintifyProduct(productId)));
@@ -74,10 +60,12 @@ export async function POST(request: Request) {
 
     const session = await stripe().checkout.sessions.create({
       mode: "payment",
+      adaptive_pricing: { enabled: true },
+      integration_identifier: `canprint_${Array.from(randomBytes(8), (value) => String.fromCharCode(97 + value % 26)).join("")}`,
       line_items: lineItems,
+      client_reference_id: user.uid,
       customer_email: user.email,
       customer_creation: "always",
-      billing_address_collection: "required",
       shipping_address_collection: { allowed_countries: ["CA", "US"] },
       phone_number_collection: { enabled: true },
       automatic_tax: { enabled: true },
@@ -109,7 +97,6 @@ export async function POST(request: Request) {
       total: subtotal + shippingAmount,
       stripeCheckoutSessionId: session.id,
       items: validatedItems.map(({ image, ...item }) => ({ ...item, image: image ?? "" })),
-      submittedAddress: body.address,
       createdAt: new Date(),
       updatedAt: new Date(),
     }, { merge: true });
