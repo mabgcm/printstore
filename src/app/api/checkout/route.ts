@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     });
     const subtotal = validatedItems.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0);
     const shippingAmount = subtotal >= 7500 ? 0 : 799;
-    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+    const siteUrl = new URL(request.url).origin;
     const metadata = { firebase_uid: user.uid };
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = validatedItems.map((item) => ({
       quantity: item.quantity,

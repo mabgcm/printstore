@@ -38,7 +38,7 @@ export function SiteHeader({ categories }: SiteHeaderProps) {
           {!loading && <div className="header-auth-links">
             {user
               ? <Link href="/account" aria-label="Open your account">Account</Link>
-              : <><Link href="/login">Login</Link><Link href="/register">Register</Link></>}
+              : <Link href="/login">Login</Link>}
           </div>}
           <Link href="/cart" className="cart-link" aria-label={`Shopping bag with ${count} items`}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.75 8.25h10.5l.75 12H6l.75-12Z" /><path d="M9 9V6a3 3 0 0 1 6 0v3" /></svg>
@@ -59,7 +59,7 @@ export function SiteHeader({ categories }: SiteHeaderProps) {
         <nav className="menu-secondary" aria-label="Customer links">
           {user
             ? <Link href="/account" onClick={closeMenu}>Your account</Link>
-            : <><Link href="/login" onClick={closeMenu}>Login</Link><Link href="/register" onClick={closeMenu}>Register</Link></>}
+            : <Link href="/login" onClick={closeMenu}>Login</Link>}
           <Link href="/track-order" onClick={closeMenu}>Track an order</Link>
           <Link href="/faq" onClick={closeMenu}>FAQ</Link>
           <Link href="/cart" onClick={closeMenu}>Your bag ({count})</Link>
