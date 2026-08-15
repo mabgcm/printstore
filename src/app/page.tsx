@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { PrintifyProduct } from "@/lib/printify/client";
 import { productsForStoreCategory } from "@/lib/catalog/categories";
 import { getStorefrontCatalog } from "@/lib/catalog/storefront";
+import { SITE_NAME, absoluteUrl, safeJsonLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -37,31 +38,16 @@ export default async function Home() {
     const product = productsForStoreCategory(products, category)[0];
     return { label: category.title, slug: category.slug, color: category.color, product, image: productImage(product) };
   });
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://printstore.ca";
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Organization",
-        "@id": `${baseUrl}/#organization`,
-        name: "Printstore",
-        url: baseUrl,
-        description: "An independent design studio creating made-to-order gifts, apparel and art prints.",
-      },
-      {
-        "@type": "WebSite",
-        "@id": `${baseUrl}/#website`,
-        url: baseUrl,
-        name: "Printstore",
-        publisher: { "@id": `${baseUrl}/#organization` },
-      },
-      {
         "@type": "ItemList",
-        name: "Featured Printstore products",
+        name: `Featured ${SITE_NAME} products`,
         itemListElement: featured.map((product, index) => ({
           "@type": "ListItem",
           position: index + 1,
-          url: `${baseUrl}/products/${product.id}`,
+          url: absoluteUrl(`/products/${product.id}`),
           name: product.title,
         })),
       },
@@ -70,7 +56,7 @@ export default async function Home() {
 
   return (
     <main>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
 
       <section className="hero-shell">
         <div className="hero-copy">
@@ -81,9 +67,9 @@ export default async function Home() {
             <Link href="#shop" className="button button-dark">Explore the collection <span aria-hidden="true">↗</span></Link>
             <Link href="/about" className="text-link">How it&apos;s made <span aria-hidden="true">→</span></Link>
           </div>
-          <div className="hero-proof" aria-label="Customer rating">
-            <div className="proof-faces" aria-hidden="true"><span>AM</span><span>JL</span><span>SK</span></div>
-            <div><strong>4.9 <span className="stars">★★★★★</span></strong><small>Loved by 2,000+ originals</small></div>
+          <div className="hero-proof" aria-label="Made-to-order promise">
+            <div className="proof-faces" aria-hidden="true"><span>CA</span><span>✦</span><span>01</span></div>
+            <div><strong>Original design</strong><small>Made to order with care</small></div>
           </div>
         </div>
 

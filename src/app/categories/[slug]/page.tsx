@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { PrintifyProduct } from "@/lib/printify/client";
 import { productsForStoreCategory } from "@/lib/catalog/categories";
 import { getStorefrontCatalog } from "@/lib/catalog/storefront";
+import { SITE_NAME, absoluteUrl, metaDescription, safeJsonLd } from "@/lib/seo";
 
 interface Props { params: Promise<{ slug: string }>; searchParams: Promise<{ sort?: string; page?: string }> }
 
@@ -15,7 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { categories } = await getStorefrontCatalog().catch(() => ({ products: [], categories: [] }));
   const category = categories.find((item) => item.slug === slug);
   if (!category) return {};
-  return { title: category.seoTitle, description: category.intro, alternates: { canonical: `/categories/${slug}` }, openGraph: { title: `${category.title} | Printstore`, description: category.intro } };
+  const description = metaDescription(`${category.intro} ${category.seoBody}`);
+  return { title: category.seoTitle, description, keywords: [category.title, category.seoTitle, `${category.title} Canada`, "made to order gifts", SITE_NAME], alternates: { canonical: `/categories/${slug}` }, openGraph: { type: "website", url: `/categories/${slug}`, siteName: SITE_NAME, title: `${category.seoTitle} | ${SITE_NAME}`, description }, twitter: { card: "summary_large_image", title: category.seoTitle, description } };
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
@@ -29,11 +31,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   if (query.sort === "name") products.sort((a, b) => a.title.localeCompare(b.title));
   const page = Math.max(1, Number(query.page) || 1); const perPage = 8; const pageCount = Math.max(1, Math.ceil(products.length / perPage)); const visible = products.slice((page - 1) * perPage, page * perPage);
   const visualSeeds = products.length ? products : allProducts;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://printstore.ca";
-  const jsonLd = { "@context": "https://schema.org", "@type": "CollectionPage", name: category.title, description: category.intro, url: `${baseUrl}/categories/${slug}`, mainEntity: { "@type": "ItemList", numberOfItems: products.length, itemListElement: visible.map((product, index) => ({ "@type": "ListItem", position: index + 1, url: `${baseUrl}/products/${product.id}`, name: product.title })) } };
+  const categoryUrl = absoluteUrl(`/categories/${slug}`);
+  const jsonLd = { "@context": "https://schema.org", "@graph": [
+    { "@type": "CollectionPage", "@id": `${categoryUrl}#collection`, name: category.seoTitle, description: category.intro, url: categoryUrl, isPartOf: { "@id": `${absoluteUrl("/")}#website` }, mainEntity: { "@type": "ItemList", numberOfItems: products.length, itemListElement: visible.map((product, index) => ({ "@type": "ListItem", position: (page - 1) * perPage + index + 1, url: absoluteUrl(`/products/${product.id}`), name: product.title })) } },
+    { "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") }, { "@type": "ListItem", position: 2, name: category.title, item: categoryUrl }] },
+  ] };
 
   return <main className="collection-page">
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
     <div className="collection-wrap">
       <nav className="breadcrumbs" aria-label="Breadcrumb"><Link href="/">Home</Link><span>›</span><span>{category.title}</span></nav>
       <header className="collection-header"><p className="eyebrow"><span /> The Printstore edit</p><h1>{category.title}</h1><p>{category.intro}</p></header>

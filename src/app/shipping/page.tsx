@@ -1,1 +1,5 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Shipping, Production and Returns", description: "Read Can Print Store production times, shipping information and support policy for damaged, defective or incorrect made-to-order products.", alternates: { canonical: "/shipping" } };
+
 export default function ShippingPage() { return <main className="mx-auto min-h-[65vh] max-w-3xl px-6 py-20"><h1 className="text-5xl font-black">Shipping & returns</h1><div className="mt-8 space-y-6 leading-7 text-black/60"><section><h2 className="text-xl font-black text-black">Production</h2><p className="mt-2">Each product is made to order. Production normally takes 2–5 business days.</p></section><section><h2 className="text-xl font-black text-black">Returns</h2><p className="mt-2">Contact us promptly for damaged, defective, or incorrect items. Include your order number and clear photos.</p></section></div></main>; }
